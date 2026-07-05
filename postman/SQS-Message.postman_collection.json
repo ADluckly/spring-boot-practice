@@ -1,0 +1,162 @@
+{
+  "info": {
+    "_postman_id": "a5c31f1b-94a9-40f1-b6d9-bca32bf6a125",
+    "name": "Spring Boot Demo - SQS + Upload Workflow API",
+    "description": "Postman collection for SQS APIs and async upload workflow (PENDING -> SUCCESS/FAILED).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Upload Pending (Create Task + Send SQS)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": ""
+            },
+            {
+              "key": "key",
+              "value": "demo/workflow-test.txt",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/files/upload/pending",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "files",
+            "upload",
+            "pending"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Upload Task Status",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/files/upload/status/{{taskId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "files",
+            "upload",
+            "status",
+            "{{taskId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Send Message",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"hello sqs\",\n  \"delaySeconds\": 0\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/sqs/messages",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "sqs",
+            "messages"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Receive Messages",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/sqs/messages?maxNumber=1&waitSeconds=0",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "sqs",
+            "messages"
+          ],
+          "query": [
+            {
+              "key": "maxNumber",
+              "value": "1"
+            },
+            {
+              "key": "waitSeconds",
+              "value": "0"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Message",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/sqs/messages?receiptHandle={{receiptHandle}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "sqs",
+            "messages"
+          ],
+          "query": [
+            {
+              "key": "receiptHandle",
+              "value": "{{receiptHandle}}"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "receiptHandle",
+      "value": ""
+    },
+    {
+      "key": "taskId",
+      "value": "1"
+    }
+  ]
+}

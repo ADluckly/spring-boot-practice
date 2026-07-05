@@ -1,0 +1,250 @@
+{
+  "info": {
+    "_postman_id": "f0d5b6af-1fe7-4a4c-9cf4-342fe46ec9f9",
+    "name": "Spring Boot Demo - S3 File API",
+    "description": "Postman collection for S3 upload/download endpoints and async upload task workflow.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Upload File",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": ""
+            },
+            {
+              "key": "key",
+              "value": "demo/test.txt",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/files/upload",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "files",
+            "upload"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Upload File Pending",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 202 Accepted\", function () {",
+              "  pm.response.to.have.status(202);",
+              "});",
+              "",
+              "var json = pm.response.json();",
+              "pm.collectionVariables.set(\"taskId\", String(json.taskId));",
+              "",
+              "if (json.objectKey) {",
+              "  pm.collectionVariables.set(\"objectKey\", json.objectKey);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "file",
+              "type": "file",
+              "src": ""
+            },
+            {
+              "key": "key",
+              "value": "demo/async-test.txt",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/files/upload/pending",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "files",
+            "upload",
+            "pending"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Upload Task Status",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200 OK\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "var json = pm.response.json();",
+              "pm.collectionVariables.set(\"lastUploadStatus\", String(json.status || 'UNKNOWN'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/files/upload/status/{{taskId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "files",
+            "upload",
+            "status",
+            "{{taskId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Poll Upload Task Until Done",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.collectionVariables.get(\"pollAttempt\")) {",
+              "  pm.collectionVariables.set(\"pollAttempt\", \"0\");",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200 OK\", function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "var json = pm.response.json();",
+              "var status = String(json.status || 'UNKNOWN');",
+              "var attempt = parseInt(pm.collectionVariables.get(\"pollAttempt\") || \"0\", 10);",
+              "var maxRetries = parseInt(pm.collectionVariables.get(\"pollMaxRetries\") || \"10\", 10);",
+              "",
+              "pm.collectionVariables.set(\"lastUploadStatus\", status);",
+              "pm.collectionVariables.set(\"pollAttempt\", String(attempt + 1));",
+              "",
+              "if (status === \"PENDING\" && attempt + 1 < maxRetries) {",
+              "  postman.setNextRequest(\"Poll Upload Task Until Done\");",
+              "} else {",
+              "  postman.setNextRequest(null);",
+              "}",
+              "",
+              "pm.test(\"Final status is not PENDING or retries reached\", function () {",
+              "  pm.expect(status === \"PENDING\" ? attempt + 1 >= maxRetries : true).to.be.true;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/files/upload/status/{{taskId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "files",
+            "upload",
+            "status",
+            "{{taskId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Download File",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/files/download?key={{objectKey}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "files",
+            "download"
+          ],
+          "query": [
+            {
+              "key": "key",
+              "value": "{{objectKey}}"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "objectKey",
+      "value": "demo/test.txt"
+    },
+    {
+      "key": "taskId",
+      "value": "1"
+    },
+    {
+      "key": "pollMaxRetries",
+      "value": "10"
+    },
+    {
+      "key": "pollAttempt",
+      "value": "0"
+    },
+    {
+      "key": "lastUploadStatus",
+      "value": "UNKNOWN"
+    }
+  ]
+}
