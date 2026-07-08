@@ -34,6 +34,13 @@ public class UserController {
         this.userService = userService;
     }
 
+    // 前端请求api发送 JSON
+    // → @RequestBody 转对象
+    // → @Valid 按 RegisterRequest 注解校验
+    // → 校验通过才进 UserService
+    // → Service 做重复检查和密码加密
+    // → Repository 存库
+    // → 返回 UserResponse
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
         UserResponse userResponse = userService.register(request);
@@ -56,7 +63,8 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> updateById(@PathVariable Long id, @Valid @RequestBody UpdateUserRequest request) {
+    public ResponseEntity<UserResponse> updateById(@PathVariable Long id,
+            @Valid @RequestBody UpdateUserRequest request) {
         return ResponseEntity.ok(userService.updateUser(id, request));
     }
 
